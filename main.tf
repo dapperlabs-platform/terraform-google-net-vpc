@@ -131,16 +131,12 @@ resource "google_compute_shared_vpc_service_project" "service_projects" {
 }
 
 resource "google_compute_subnetwork" "subnetwork" {
-  for_each      = local.subnets
-  project       = var.project_id
-  network       = local.network.name
-  region        = each.value.region
-  name          = each.value.name
-  ip_cidr_range = each.value.ip_cidr_range
-  secondary_ip_range = each.value.secondary_ip_range == null ? [] : [
-    for name, range in each.value.secondary_ip_range :
-    { range_name = name, ip_cidr_range = range }
-  ]
+  for_each                 = local.subnets
+  project                  = var.project_id
+  network                  = local.network.name
+  region                   = each.value.region
+  name                     = each.value.name
+  ip_cidr_range            = each.value.ip_cidr_range
   description              = lookup(var.subnet_descriptions, "${each.value.region}/${each.value.name}", "Terraform-managed.")
   private_ip_google_access = lookup(var.subnet_private_access, "${each.value.region}/${each.value.name}", true)
   dynamic "log_config" {
@@ -150,6 +146,13 @@ resource "google_compute_subnetwork" "subnetwork" {
       aggregation_interval = config.value.aggregation_interval
       flow_sampling        = config.value.flow_sampling
       metadata             = config.value.metadata
+    }
+  }
+  dynamic "secondary_ip_range" {
+    for_each = each.value.secondary_ip_range == null ? {} : each.value.secondary_ip_range
+    content {
+      range_name    = secondary_ip_range.key
+      ip_cidr_range = secondary_ip_range.value
     }
   }
 }
