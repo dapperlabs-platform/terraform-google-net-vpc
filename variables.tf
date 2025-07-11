@@ -181,5 +181,5 @@ variable "subnet_private_access" {
 variable "vpc_create" {
   description = "Create VPC. When set to false, uses a data source to reference existing VPC."
   type        = bool
-  default     = true
+  default     = false
 }
